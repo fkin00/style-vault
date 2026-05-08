@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>全息镭射按钮</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #121212; perspective: 1000px; font-family: 'Helvetica Neue', sans-serif; }
+
+        .holo-btn {
+            position: relative; width: 260px; height: 80px;
+            background: rgba(20, 20, 20, 0.8);
+            border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; font-size: 18px; font-weight: bold; letter-spacing: 2px;
+            cursor: pointer; overflow: hidden;
+            /* 允许3D空间翻转 */
+            transform-style: preserve-3d;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            transition: transform 0.1s;
+        }
+
+        /* 文字层，略微浮起产生Z轴视差 */
+        .btn-text { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; transform: translateZ(30px); pointer-events: none; z-index: 2; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+
+        /* 核心黑魔法：镭射反光层 */
+        .holo-glare {
+            position: absolute; inset: -50%; /* 做大一点方便移动 */
+            /* 复杂的彩虹镭射渐变叠加纯白高光 */
+            background: 
+                radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.8) 0%, transparent 40%),
+                linear-gradient(var(--deg, 0deg), transparent 20%, #ff0055 30%, #00f0ff 40%, #ffea00 50%, #b200ff 60%, transparent 80%);
+            background-size: 100% 100%, 200% 200%;
+            background-position: center, var(--mx, 50%) var(--my, 50%);
+            opacity: 0; transition: opacity 0.3s;
+            /* 混合模式：让色彩渗入底层的暗色中，产生真实的物理反光感 */
+            mix-blend-mode: color-dodge;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .holo-btn:hover .holo-glare { opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <button class="holo-btn" id="holo">
+        <span class="btn-text">MINT NFT</span>
+        <div class="holo-glare" id="glare"></div>
+    </button>
+
+    <script>
+        const btn = document.getElementById('holo');
+        
+        btn.addEventListener('mousemove', (e) => {
+            const rect = btn.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // 计算鼠标在按钮内部的百分比 (0 到 100)
+            const px = (x / rect.width) * 100;
+            const py = (y / rect.height) * 100;
+            
+            // 计算 3D 偏转角度
+            const rotateX = ((y / rect.height) - 0.5) * -30; // 上下倾斜
+            const rotateY = ((x / rect.width) - 0.5) * 30;   // 左右倾斜
+            
+            // 改变彩虹渐变的角度，使其随鼠标转动
+            const deg = Math.atan2(y - rect.height/2, x - rect.width/2) * (180 / Math.PI) + 90;
+
+            btn.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            btn.style.setProperty('--mx', `${px}%`);
+            btn.style.setProperty('--my', `${py}%`);
+            btn.style.setProperty('--deg', `${deg}deg`);
+        });
+
+        btn.addEventListener('mouseleave', () => {
+            // 归位
+            btn.style.transform = `rotateX(0deg) rotateY(0deg)`;
+            setTimeout(() => { btn.style.transition = 'transform 0.1s'; }, 10);
+        });
+    </script>
+</body>
+</html>

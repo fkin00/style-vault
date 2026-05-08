@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>引力磁吸按钮</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #e5e5e5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        /* 触发引力的不可见力场范围 */
+        .magnetic-area {
+            padding: 100px; /* 鼠标进入这个范围就开始产生引力 */
+            /* border: 1px dashed #ccc; */ /* 取消注释可以查看力场范围 */
+        }
+
+        .magnetic-btn {
+            position: relative; width: 180px; height: 60px;
+            background: #111; border-radius: 30px; border: none; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            /* 极其平滑的物理回弹曲线 */
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            will-change: transform;
+        }
+
+        .btn-text {
+            color: #fff; font-size: 16px; font-weight: 600; letter-spacing: 1px;
+            pointer-events: none;
+            /* 文字的回弹曲线要略微不同，制造错位感 */
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            will-change: transform;
+        }
+
+        /* 当按钮离开引力区时的归位动画 */
+        .magnetic-area:not(:hover) .magnetic-btn,
+        .magnetic-area:not(:hover) .btn-text {
+            transform: translate(0, 0) !important;
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); /* 带有弹簧抖动感的归位 */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="magnetic-area" id="magnet-zone">
+        <button class="magnetic-btn" id="magnet-btn">
+            <span class="btn-text" id="magnet-text">PULL ME</span>
+        </button>
+    </div>
+
+    <script>
+        const zone = document.getElementById('magnet-zone');
+        const btn = document.getElementById('magnet-btn');
+        const text = document.getElementById('magnet-text');
+
+        zone.addEventListener('mousemove', (e) => {
+            const rect = btn.getBoundingClientRect();
+            // 计算按钮真正的中心点
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            // 计算鼠标到中心的距离向量
+            const distanceX = e.clientX - centerX;
+            const distanceY = e.clientY - centerY;
+
+            // 核心魔法：外壳移动 30% 的距离，文字移动 60% 的距离，制造 Z 轴视差
+            btn.style.transform = `translate(${distanceX * 0.3}px, ${distanceY * 0.3}px)`;
+            text.style.transform = `translate(${distanceX * 0.3}px, ${distanceY * 0.3}px)`;
+            
+            // 因为在 hover 状态下需要实时跟随，所以取消 transition 避免延迟粘滞感
+            btn.style.transition = 'none';
+            text.style.transition = 'none';
+        });
+
+        zone.addEventListener('mouseleave', () => {
+            // 鼠标离开时，恢复 CSS 的 transition 让它弹跳回原位
+            btn.style.transition = '';
+            text.style.transition = '';
+        });
+    </script>
+</body>
+</html>

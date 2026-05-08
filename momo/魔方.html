@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>真实机械旋转：量子魔方加载</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; background: radial-gradient(circle at center, #111 0%, #000 100%);
+            overflow: hidden; perspective: 1200px; 
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .scene {
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        /* 魔方整体外层旋转容器：让玩家能看到各个面的扭转过程 */
+        .rubiks-wrapper {
+            position: relative;
+            width: 0; height: 0;
+            transform-style: preserve-3d;
+            /* 整体在宇宙中缓慢全景翻滚 */
+            animation: rotateUniverse 25s linear infinite;
+        }
+
+        @keyframes rotateUniverse {
+            0% { transform: rotateX(-20deg) rotateY(0deg) rotateZ(0deg); }
+            100% { transform: rotateX(340deg) rotateY(720deg) rotateZ(360deg); }
+        }
+
+        /* 27个独立小方块 */
+        .mini-cube {
+            position: absolute;
+            width: 40px; height: 40px;
+            /* 精确居中于世界原点 */
+            top: 50%; left: 50%;
+            margin-top: -20px; margin-left: -20px;
+            transform-style: preserve-3d;
+            /* 物理扭转时的动画曲线：带有机械卡顿和回弹感 */
+            transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1.2);
+        }
+
+        /* 小方块的6个面 */
+        .face {
+            position: absolute;
+            width: 40px; height: 40px;
+            border-radius: 4px;
+            backface-visibility: hidden;
+        }
+
+        /* 空间推挤构建方块 */
+        .front  { transform: translateZ(20px); }
+        .back   { transform: rotateY(180deg) translateZ(20px); }
+        .left   { transform: rotateY(-90deg) translateZ(20px); }
+        .right  { transform: rotateY(90deg) translateZ(20px); }
+        .top    { transform: rotateX(90deg) translateZ(20px); }
+        .bottom { transform: rotateX(-90deg) translateZ(20px); }
+
+        /* 底部全息投影发光台 */
+        .hologram-shadow {
+            position: absolute; top: 160px; left: -100px;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.5) 0%, transparent 60%);
+            transform: rotateX(90deg);
+            filter: blur(25px);
+            animation: pulseShadow 2s infinite alternate;
+        }
+        @keyframes pulseShadow {
+            0% { transform: rotateX(90deg) scale(0.9); opacity: 0.6; }
+            100% { transform: rotateX(90deg) scale(1.1); opacity: 1; }
+        }
+
+        .loading-text {
+            position: absolute; bottom: 12%;
+            color: #00d2ff; font-size: 18px; letter-spacing: 10px;
+            text-shadow: 0 0 10px #00d2ff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scene">
+        <!-- 底部发光阴影 -->
+        <div class="hologram-shadow"></div>
+        <!-- 真正的魔方机械内核 -->
+        <div class="rubiks-wrapper" id="cube-core"></div>
+    </div>
+    
+    <div class="loading-text">CALCULATING_MATRIX...</div>
+
+    <script>
+        const wrapper = document.getElementById('cube-core');
+        const cubies = []; // 存储27个方块的状态
+        const size = 42; // 方块尺寸(40) + 间距(2)
+
+        // 霓虹配色
+        const colors = {
+            right: '#00d2ff',  // 霓虹蓝
+            left: '#00ff66',   // 霓虹绿
+            top: '#ffffff',    // 纯白光
+            bottom: '#ffea00', // 荧光黄
+            front: '#ff0055',  // 赛博粉红
+            back: '#ff6600'    // 熔岩橙
+        };
+
+        // 1. 初始化魔方矩阵
+        for(let x = -1; x <= 1; x++) {
+            for(let y = -1; y <= 1; y++) {
+                for(let z = -1; z <= 1; z++) {
+                    const cube = document.createElement('div');
+                    cube.className = 'mini-cube';
+                    
+                    // 初始位置写入CSS
+                    const initTransform = `translate3d(${x * size}px, ${y * size}px, ${z * size}px)`;
+                    cube.style.transform = initTransform;
+
+                    const faces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+                    faces.forEach(f => {
+                        const face = document.createElement('div');
+                        face.className = `face ${f}`;
+                        
+                        let isOuter = false, color = '#111';
+                        // 判定是否是外表面
+                        if (f === 'right' && x === 1) { isOuter = true; color = colors.right; }
+                        if (f === 'left' && x === -1) { isOuter = true; color = colors.left; }
+                        if (f === 'top' && y === -1) { isOuter = true; color = colors.top; }
+                        if (f === 'bottom' && y === 1) { isOuter = true; color = colors.bottom; }
+                        if (f === 'front' && z === 1) { isOuter = true; color = colors.front; }
+                        if (f === 'back' && z === -1) { isOuter = true; color = colors.back; }
+
+                        if (isOuter) {
+                            face.style.background = color;
+                            face.style.boxShadow = `0 0 15px ${color}, inset 0 0 15px rgba(0,0,0,0.8)`;
+                            face.style.border = '2px solid #000';
+                        } else {
+                            // 机械内构
+                            face.style.background = '#080808';
+                            face.style.border = '1px solid #1a1a1a';
+                        }
+                        cube.appendChild(face);
+                    });
+                    
+                    wrapper.appendChild(cube);
+                    
+                    // 存入JS引擎进行坐标追踪
+                    cubies.push({
+                        el: cube,
+                        x: x, y: y, z: z,
+                        bakedTransform: initTransform // 用于累加旋转矩阵
+                    });
+                }
+            }
+        }
+
+        // 2. 机械旋转物理引擎
+        const axes = ['x', 'y', 'z'];
+        
+        function nextMove() {
+            // 随机抽取旋转轴 (X, Y, Z)，旋转层 (-1, 0, 1) 和 方向 (+90deg, -90deg)
+            const axis = axes[Math.floor(Math.random() * 3)];
+            const layer = Math.floor(Math.random() * 3) - 1; 
+            const dir = Math.random() > 0.5 ? 1 : -1;
+
+            // 筛选出当前正好位于该层的9个小方块
+            const targets = cubies.filter(c => c[axis] === layer);
+            
+            targets.forEach(c => {
+                // 开启过渡动画
+                c.el.style.transition = 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1.2)';
+                
+                // 核心黑魔法：在当前已烘焙的矩阵前，追加最新的空间旋转角度
+                c.el.style.transform = `rotate${axis.toUpperCase()}(${dir * 90}deg) ${c.bakedTransform}`;
+                
+                // 向量数学：更新方块旋转后的逻辑坐标，供下一次筛选层级使用
+                let nx = c.x, ny = c.y, nz = c.z;
+                if (axis === 'x') { ny = -dir * c.z; nz = dir * c.y; }
+                else if (axis === 'y') { nx = dir * c.z; nz = -dir * c.x; }
+                else if (axis === 'z') { nx = -dir * c.y; ny = dir * c.x; }
+                
+                c.x = Math.round(nx);
+                c.y = Math.round(ny);
+                c.z = Math.round(nz);
+            });
+
+            // 等待本次机械旋转完成
+            setTimeout(() => {
+                targets.forEach(c => {
+                    // 读取浏览器计算后的 Matrix3D 矩阵并“烘焙”存盘
+                    c.bakedTransform = window.getComputedStyle(c.el).transform;
+                    // 关闭过渡动画，静默替换为计算后的矩阵防止无限累加字符串
+                    c.el.style.transition = 'none';
+                    c.el.style.transform = c.bakedTransform;
+                });
+                
+                // 强制浏览器重绘
+                document.body.offsetHeight; 
+                
+                // 休息一会，开始下一次扭转
+                setTimeout(nextMove, 150); 
+            }, 450); // 450ms 对应 css transition 的时间
+        }
+
+        // 延迟1秒后开始无限扭转
+        setTimeout(nextMove, 1000);
+
+    </script>
+</body>
+</html>

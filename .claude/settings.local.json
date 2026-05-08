@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node import-templates.cjs)",
+      "Bash(node -e \"import\\('./src/data/styles.js'\\).then\\(m => console.log\\('Styles count:', m.styles.length, 'Additional:', m.additionalStyles.length, 'Total:', m.allStyles.length, 'Categories:', m.categories\\)\\)\")",
+      "Bash(mv src/data/styles-fixed.js src/data/styles.js)",
+      "Bash(node -e \"import\\('./src/data/styles.js'\\).then\\(m => console.log\\('Styles:', m.styles.length, 'Additional:', m.additionalStyles.length, 'Total:', m.allStyles.length, 'Categories:', m.categories\\)\\)\")",
+      "Bash(npm run:*)",
+      "Bash(node --check src/data/styles.js)",
+      "Bash(node:*)",
+      "Bash(grep -n \"}}\\\\\\\\|}}\" src/data/styles.js)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(sed:*)"
+    ]
+  }
+}

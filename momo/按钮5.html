@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>高压过载按钮</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #0d0d0f; font-family: 'Arial Black', sans-serif; }
+
+        .overload-btn {
+            position: relative; width: 220px; height: 70px;
+            background: #151518; color: #fff; font-size: 20px; letter-spacing: 3px;
+            border: none; outline: none; cursor: pointer;
+            overflow: hidden; border-radius: 4px;
+            display: flex; justify-content: center; align-items: center;
+            transition: background 0.4s, text-shadow 0.4s;
+        }
+
+        /* 伪造的边框层：其实是一个巨大的旋转背景，被遮罩挡住了中心 */
+        .overload-btn::before {
+            content: ''; position: absolute;
+            width: 150%; height: 300%;
+            /* 核心：圆锥形发光渐变带 */
+            background: conic-gradient(transparent, transparent, transparent, #ff003c);
+            animation: radarRotate 4s linear infinite;
+        }
+
+        /* 挖掉中心，只露出 2px 的边缘 */
+        .overload-btn::after {
+            content: ''; position: absolute;
+            inset: 3px; /* 距离外围3px，形成边框 */
+            background: #151518; border-radius: 2px;
+            transition: background 0.3s;
+        }
+
+        .btn-text { position: relative; z-index: 10; transition: color 0.3s; }
+
+        /* 平缓的休眠旋转 */
+        @keyframes radarRotate { 100% { transform: rotate(360deg); } }
+
+        /* 引擎过载的剧烈抖动 */
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-2px, 1px) rotate(-1deg); }
+            40% { transform: translate(2px, -2px) rotate(1deg); }
+            60% { transform: translate(-2px, -1px) rotate(0deg); }
+            80% { transform: translate(2px, 2px) rotate(-1deg); }
+        }
+
+        /* --- 悬停过载反应 --- */
+        .overload-btn:hover {
+            /* 激活剧烈震颤 */
+            animation: shake 0.2s infinite;
+            /* 内部核反应堆亮起红光 */
+            box-shadow: 0 0 40px rgba(255, 0, 60, 0.4);
+        }
+
+        .overload-btn:hover::before {
+            /* 悬停时，电弧变粗，并疯狂加速旋转 (0.4秒一圈) */
+            background: conic-gradient(transparent, #ff003c, #fff);
+            animation: radarRotate 0.4s linear infinite;
+        }
+
+        .overload-btn:hover::after {
+            /* 内部金属变红 */
+            background: #33000b;
+        }
+
+        .overload-btn:hover .btn-text {
+            color: #fff; text-shadow: 0 0 10px #ff003c, 0 0 20px #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="overload-btn">
+        <span class="btn-text">DETONATE</span>
+    </button>
+
+</body>
+</html>

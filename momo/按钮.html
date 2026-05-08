@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>X光透视按钮</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #070707; font-family: 'Helvetica Neue', sans-serif; }
+
+        .xray-btn {
+            position: relative; width: 280px; height: 80px;
+            background: #111; border-radius: 8px; border: 1px solid #333;
+            color: #555; font-size: 20px; font-weight: bold; letter-spacing: 4px;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        /* 内部透视的机械核心层 */
+        .xray-core {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            /* 极其复杂的内部构造图：发光网格 + 扫描线 */
+            background: 
+                linear-gradient(90deg, transparent 48%, #00f0ff 48%, #00f0ff 52%, transparent 52%),
+                linear-gradient(0deg, transparent 48%, #00f0ff 48%, #00f0ff 52%, transparent 52%),
+                repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0, 240, 255, 0.1) 10px, rgba(0, 240, 255, 0.1) 20px);
+            background-size: 40px 40px, 40px 40px, 100% 100%;
+            color: #fff;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 20px; font-weight: bold; letter-spacing: 4px; text-shadow: 0 0 10px #00f0ff;
+            /* 核心黑魔法：利用径向渐变作为遮罩，只有鼠标周围 60px 才会显示这一层 */
+            -webkit-mask-image: radial-gradient(circle 60px at var(--x, -100px) var(--y, -100px), black 0%, transparent 100%);
+            mask-image: radial-gradient(circle 60px at var(--x, -100px) var(--y, -100px), black 0%, transparent 100%);
+            transition: -webkit-mask-image 0.1s ease-out;
+            pointer-events: none;
+        }
+
+        /* 给内部文字加点内容 */
+        .xray-core::before { content: '背景     有字 '; position: absolute; z-index: 2; }
+    </style>
+</head>
+<body>
+
+    <button class="xray-btn" id="btn">
+        按钮
+        <div class="xray-core"></div>
+    </button>
+
+    <script>
+        const btn = document.getElementById('btn');
+        btn.addEventListener('mousemove', (e) => {
+            const rect = btn.getBoundingClientRect();
+            // 获取鼠标相对于按钮内部的精准坐标
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            // 实时注入给 CSS 遮罩
+            btn.style.setProperty('--x', `${x}px`);
+            btn.style.setProperty('--y', `${y}px`);
+        });
+        btn.addEventListener('mouseleave', () => {
+            // 鼠标移出时将透视孔移到屏幕外
+            btn.style.setProperty('--x', `-100px`);
+            btn.style.setProperty('--y', `-100px`);
+        });
+    </script>
+</body>
+</html>
