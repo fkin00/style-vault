@@ -3,3 +3,4 @@ dist
 node-cache
 .DS_Store
 *.local
+.claude
